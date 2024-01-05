@@ -1,16 +1,17 @@
 const expressAsyncHandler = require("express-async-handler");
+const { checkForSession } = require("../sql/user.queries");
 
 const authenticateSession = expressAsyncHandler(async (req, res, next) => {
-  const reqSessionId = req.headers.cookie
-    ? req.headers.cookie.split("=")[1]
-    : null;
-  const userSession = sessions[reqSessionId];
+  const reqSessionId = req.cookies.session;
 
-  if (!userSession) {
+  console.log("Authenticating with sessionId...");
+  console.log(reqSessionId);
+
+  const sessionExists = await checkForSession(reqSessionId, req.DB_CLIENT);
+
+  if (!sessionExists) {
     return res.status(401).send("Invalid session");
   }
-
-  req.user = userSession;
   next();
 });
 

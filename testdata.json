@@ -1,0 +1,15 @@
+[
+  {
+    "name": "john",
+    "lastname": "doe",
+    "email": "john.doe@web.de",
+    "phone": "+491764371220",
+    "gender": "male",
+    "password": "johndoe123"
+  },
+
+  {
+    "email": "john.doe@web.de",
+    "password": "johndoe123"
+  }
+]

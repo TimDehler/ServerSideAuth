@@ -14,8 +14,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/api/private/users", require("./routes/private/privateUserRoutes"));
-app.use("/api/public/users", require("./routes/public/publicUserRoutes"));
+// const query = `SELECT * FROM sessions`;
+// DB_CLIENT.query(query, (err, result) => {
+//   if (err) {
+//     console.error("Error executing query", err);
+//   } else {
+//     console.log("Query result", result.rows);
+//   }
+// });
+
+app.use("/api/users", require("./routes/userRoutes"));
 
 app.use(errorHandler);
 

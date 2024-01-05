@@ -1,6 +1,12 @@
 const asyncHandler = require("express-async-handler");
+const bcrypt = require("bcrypt");
+const uuidv4 = require("uuid").v4;
 
-const { createUser } = require("../queries/user.queries");
+const {
+  createUser,
+  getPasswordForEmail,
+  storeSession,
+} = require("../sql/user.queries");
 
 //@desc Register a user
 //@route POST /api/users/register
@@ -10,23 +16,24 @@ const registerUser = asyncHandler(async (req, res) => {
   const { name, lastname, email, phone, gender, password } = req.body;
 
   if (!name || !lastname || !email || !phone || !gender || !password) {
-    console.log("did validity check");
     res.status(400);
     throw new Error("All fields are mandatory");
   }
 
-  try {
-    const queryResult = await createUser(
-      { name, lastname, email, phone, gender, password },
-      req.DB_CLIENT
-    );
+  const hashedPassword = await bcrypt.hash(password, 10);
 
+  const queryResult = await createUser(
+    { name, lastname, email, phone, gender, hashedPassword },
+    req.DB_CLIENT
+  );
+
+  if (queryResult) {
     res.status(201).json({
-      queryResult,
+      message: "Created",
+      user: queryResult,
     });
-  } catch (error) {
-    console.log("Error");
-    res.status(400);
+  } else {
+    res.status(500);
     throw new Error("SQL Error");
   }
 });
@@ -36,23 +43,49 @@ const registerUser = asyncHandler(async (req, res) => {
 // @access public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  const client = req.DB_CLIENT;
 
-  try {
-    const queryResult = await createUser({ email, password }, req.DB_CLIENT);
+  const queryResult = await getPasswordForEmail({ email }, client);
 
-    res.status(201).json({
-      queryResult,
-    });
-  } catch (error) {
-    console.log("Error");
-    res.status(400);
-    throw new Error("SQL Error");
+  if (!queryResult) {
+    res.status(401);
+    throw new Error("Invalid Credentials");
+  }
+
+  const isPwdMatch = await bcrypt.compare(password, queryResult.password);
+
+  if (!isPwdMatch) {
+    res.status(401);
+    throw new Error("Invalid Credentials");
+  }
+
+  const sessionId = uuidv4();
+
+  const sessionQueryResult = await storeSession(
+    sessionId,
+    queryResult.id,
+    client
+  );
+
+  if (!sessionQueryResult) {
+    throw new Error();
+  }
+
+  if (sessionQueryResult && isPwdMatch) {
+    res.set("Set-Cookie", `session=${sessionId}`);
+    res.send("success");
   }
 });
 
 //@desc Get current user
 //@route GET /api/users/current
 // @access private
-const currentUser = asyncHandler(async (req, res) => {});
+const currentUser = asyncHandler(async (req, res) => {
+  try {
+    res.status(200).send("OK");
+  } catch (error) {
+    res.json({ error });
+  }
+});
 
 module.exports = { registerUser, loginUser, currentUser };
