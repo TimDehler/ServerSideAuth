@@ -5,13 +5,21 @@ const createUser = async (
   client
 ) => {
   const hashedPassword = await bcrypt.hash(password, 10);
-  const createQuery = `
+  const query = `
   INSERT INTO users (name, lastname, email, phone, gender, password)
   VALUES ('${name}', '${lastname}', '${email}', '${phone}', '${gender}', '${hashedPassword}')
   RETURNING *;`;
+  return await executeQuery(query, client);
+};
 
+const getPasswordForEmail = async ({ email, password }, client) => {
+  const query = `SELECT password FROM USERS WHERE email = '${email}'`;
+  return await executeQuery(query, client);
+};
+
+const executeQuery = (query, client) => {
   return new Promise((resolve, reject) => {
-    client.query(createQuery, (err, result) => {
+    client.query(query, (err, result) => {
       if (err) {
         console.error("Error executing query", err);
         reject(err);
@@ -35,4 +43,4 @@ const deleteUser = () => {
       RETURNING *;`;
 };
 
-module.exports = { createUser, deleteUser };
+module.exports = { createUser, deleteUser, getPasswordForEmail };
