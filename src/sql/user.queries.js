@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const getCurrentDateTimeString = require("../util/dateTime");
 
 const createUser = async (
   { name, lastname, email, phone, gender, hashedPassword },
@@ -26,12 +27,16 @@ const getPasswordForEmail = async ({ email }, client) => {
 
 const storeSession = async (sessionId, userId, client) => {
   const query = `
-  INSERT INTO sessions (userid, sessionid)
-  VALUES ($1, $2)
+  INSERT INTO sessions (userid, sessionid, creationDate, creationTime)
+  VALUES ($1, $2, $3, $4)
   RETURNING *;`;
+
+  const { date, time } = getCurrentDateTimeString();
   return await executeQuery(query, client, [
     userId,
     sessionId.toString("utf8"),
+    date,
+    time,
   ]);
 };
 
