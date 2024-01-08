@@ -68,7 +68,8 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 
   if (!sessionQueryResult) {
-    throw new Error();
+    res.status(500);
+    throw new Error("SQL Error");
   }
 
   if (sessionQueryResult && isPwdMatch) {

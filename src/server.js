@@ -4,21 +4,16 @@ const connectDB = require("./config/db.Connection");
 const dotenv = require("dotenv").config();
 const cors = require("cors");
 
-const getCurrentDateTimeString = require("./util/dateTime");
-
 const DB_CLIENT = connectDB();
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
 app.use((req, res, next) => {
   req.DB_CLIENT = DB_CLIENT;
   next();
 });
-
-const { date, time } = getCurrentDateTimeString();
-console.log(date);
-console.log(time);
 
 const clearTables = () => {
   DB_CLIENT.query("DELETE FROM sessions");
@@ -79,10 +74,12 @@ const getSessionsTableEntries = async (client) => {
   }
 };
 
-getSessionsTableEntries(DB_CLIENT);
+// getSessionsTableEntries(DB_CLIENT);
+
+// clearTables();
+
 // deleteColumnFromSessionsTable(DB_CLIENT);
 // addColumnToSessionsTable(DB_CLIENT);
-// clearTables();
 
 app.use("/api/users", require("./routes/userRoutes"));
 
